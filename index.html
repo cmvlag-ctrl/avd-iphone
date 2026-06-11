@@ -38,7 +38,7 @@
             text-shadow: none;
             font-family: Arial, sans-serif;
             opacity: 0;
-            transition: none;  /* ✅ PAS DE TRANSITION */
+            transition: opacity 0.1s;
             z-index: 50;
             pointer-events: none;
         }
@@ -229,7 +229,6 @@
         <div class="stat-line" id="statSize">Taille: --px</div>
         <div class="stat-line" id="statCooldown">Cooldown: 0ms</div>
         <div class="stat-line" id="statFPS">FPS: 0</div>
-        <div class="stat-line" id="statDisplayTime">Affichée: 0ms</div>
     </div>
 
     <div id="status">
@@ -253,7 +252,6 @@
         const toggleButton = document.getElementById('toggleButton');
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-        // ===== PARAMÈTRES PRINCIPAUX =====
         let displayTime = 60;
         let acuityLevel = 6.0;
         let minSpeed = 150;
@@ -261,7 +259,6 @@
         let refDistance = 50;
         let cooldown = 1000;
 
-        // ===== VARIABLES D'ÉTAT =====
         let fps = 0;
         let frameCount = 0;
         let lastFPSTime = Date.now();
@@ -271,7 +268,6 @@
         let currentAngularSpeed = 0;
         let lastLetterTime = 0;
         let lastLetterDisplayTime = 0;
-        let letterDisplayStartTime = 0;
 
         let lastYaw = null;
         let lastPitch = null;
@@ -281,17 +277,6 @@
 
         let detector = null;
         let initialized = false;
-
-        // ===== VARIABLES POUR LE LISSAGE =====
-        let smoothedYaw = 0;
-        let smoothedPitch = 0;
-        let smoothedAngularSpeed = 0;
-        let movementBuffer = [];
-        const BUFFER_SIZE = 5;
-        const NOISE_THRESHOLD = 1.5;
-        const VELOCITY_THRESHOLD = 2;
-        let lastValidYaw = null;
-        let lastValidPitch = null;
 
         function log(id, msg, type = 'normal') {
             console.log(msg);
@@ -314,7 +299,7 @@
             }
         });
 
-        // ===== INITIALISER BLAZEFACE =====
+        // Initialiser BlazeFace
         async function initBlazeFace() {
             try {
                 log('statTF', '⏳ Chargement TensorFlow...');
@@ -332,7 +317,7 @@
             }
         }
 
-        // ===== CALCULER LES ANGLES =====
+        // Calculer les angles
         function calculateHeadAngles(landmarks) {
             if (!landmarks || landmarks.length < 6) {
                 return null;
@@ -345,10 +330,12 @@
                 const leftEar = landmarks[4];
                 const rightEar = landmarks[5];
 
+                // YAW (rotation gauche-droite)
                 const eyeCenterX = (leftEye[0] + rightEye[0]) / 2;
                 const earCenterX = (leftEar[0] + rightEar[0]) / 2;
                 const yawAngle = ((eyeCenterX - earCenterX) / 100) * 90;
 
+                // PITCH (rotation haut-bas)
                 const eyeCenterY = (leftEye[1] + rightEye[1]) / 2;
                 const mouthY = mouth[1];
                 const pitchAngle = ((eyeCenterY - mouthY) / 100) * 60;
@@ -363,59 +350,34 @@
             }
         }
 
-        // ===== FILTRE BRUIT =====
-        function isNoise(newYaw, newPitch, lastYaw, lastPitch) {
-            if (lastYaw === null || lastPitch === null) return false;
-            
-            const yawDelta = Math.abs(newYaw - lastYaw);
-            const pitchDelta = Math.abs(newPitch - lastPitch);
-            
-            const normalizeAngle = (d) => d > 90 ? 180 - d : d;
-            const normalizedYaw = normalizeAngle(yawDelta);
-            const normalizedPitch = normalizeAngle(pitchDelta);
-            
-            return normalizedYaw < NOISE_THRESHOLD && normalizedPitch < NOISE_THRESHOLD;
-        }
-
-        // ===== LISSAGE EXPONENTIEL =====
-        function smoothValue(newValue, smoothedValue, alpha = 0.3) {
-            return smoothedValue * (1 - alpha) + newValue * alpha;
-        }
-
-        // ===== VITESSE ANGULAIRE AMÉLIORÉE =====
-        function calculateAngularVelocityImproved(newYaw, newPitch, timeDelta) {
-            if (lastValidYaw === null || lastValidPitch === null) {
-                lastValidYaw = newYaw;
-                lastValidPitch = newPitch;
+        // Vitesse angulaire
+        function calculateAngularVelocity(newYaw, newPitch, timeDelta) {
+            if (lastYaw === null) {
+                lastYaw = newYaw;
+                lastPitch = newPitch;
+                lastYawTime = Date.now();
                 return 0;
             }
 
             if (timeDelta < 30) return 0;
 
-            // Ignorer le bruit
-            if (isNoise(newYaw, newPitch, lastValidYaw, lastValidPitch)) {
-                return smoothedAngularSpeed;
-            }
+            const deltaYaw = Math.abs(newYaw - lastYaw);
+            const deltaPitch = Math.abs(newPitch - lastPitch);
 
-            const deltaYaw = Math.abs(newYaw - lastValidYaw);
-            const deltaPitch = Math.abs(newPitch - lastValidPitch);
+            const adjustDelta = (d) => d > 90 ? 180 - d : d;
+            const adjYaw = adjustDelta(deltaYaw);
+            const adjPitch = adjustDelta(deltaPitch);
 
-            const normalizeAngle = (d) => d > 90 ? 180 - d : d;
-            const normalizedYaw = normalizeAngle(deltaYaw);
-            const normalizedPitch = normalizeAngle(deltaPitch);
+            const totalAngularSpeed = (adjYaw + adjPitch) / (timeDelta / 1000);
 
-            const totalAngularSpeed = (normalizedYaw + normalizedPitch) / (timeDelta / 1000);
+            lastYaw = newYaw;
+            lastPitch = newPitch;
+            lastYawTime = Date.now();
 
-            // Appliquer lissage
-            smoothedAngularSpeed = smoothValue(totalAngularSpeed, smoothedAngularSpeed, 0.4);
-
-            lastValidYaw = newYaw;
-            lastValidPitch = newPitch;
-
-            return smoothedAngularSpeed;
+            return totalAngularSpeed;
         }
 
-        // ===== ESTIMER DISTANCE =====
+        // Estimer distance
         function estimateDistance(start, end) {
             try {
                 const faceWidth = Math.sqrt(
@@ -430,25 +392,13 @@
             }
         }
 
-        // ===== CALCULER TAILLE LETTRE =====
         function calculateLetterSize() {
             const pixelPerDegree = 60;
             const size = (acuityLevel / 10) * pixelPerDegree * (currentDistance / refDistance);
             return size;
         }
 
-        // ===== VÉRIFIER SI ON DOIT AFFICHER LA LETTRE =====
-        function shouldDisplayLetter(angularSpeed) {
-            const now = Date.now();
-            const cooldownOver = now - lastLetterDisplayTime > cooldown;
-
-            // ✅ SEUL CRITÈRE : vitesse entre min et max ET cooldown écoulé
-            const isSpeedValid = angularSpeed >= minSpeed && angularSpeed <= maxSpeed;
-            
-            return cooldownOver && isSpeedValid;
-        }
-
-        // ===== DÉMARRER CAMÉRA =====
+        // Démarrer caméra
         async function startCamera() {
             try {
                 log('statVideo', '⏳ Activation caméra...');
@@ -492,7 +442,7 @@
             }
         }
 
-        // ===== BOUCLE ANIMATION =====
+        // Boucle animation
         async function animate() {
             try {
                 if (video.readyState === video.HAVE_ENOUGH_DATA && detector) {
@@ -510,18 +460,25 @@
                             const angles = calculateHeadAngles(landmarks);
                             
                             if (angles) {
+                                currentYaw = angles.yaw;
+                                currentPitch = angles.pitch;
+
                                 const now = Date.now();
                                 const timeDelta = now - lastYawTime;
 
                                 if (timeDelta > 0) {
-                                    currentAngularSpeed = calculateAngularVelocityImproved(
+                                    currentAngularSpeed = calculateAngularVelocity(
                                         angles.yaw,
                                         angles.pitch,
                                         timeDelta
                                     );
 
-                                    // ✅ AFFICHER LETTRE SI VITESSE VALIDE
-                                    if (shouldDisplayLetter(currentAngularSpeed)) {
+                                    const isMoving = currentAngularSpeed >= minSpeed && 
+                                                   currentAngularSpeed <= maxSpeed;
+
+                                    const cooldownOver = now - lastLetterDisplayTime > cooldown;
+
+                                    if (isMoving && cooldownOver) {
                                         currentDistance = estimateDistance(start, end);
                                         currentLetterSize = calculateLetterSize();
                                         currentLetter = letters[Math.floor(Math.random() * letters.length)];
@@ -530,27 +487,11 @@
                                         letterDisplay.style.opacity = '1';
                                         lastLetterTime = now;
                                         lastLetterDisplayTime = now;
-                                        letterDisplayStartTime = now;
-                                        
-                                        console.log(`✅ LETTRE: ${currentLetter} | Vitesse: ${Math.round(currentAngularSpeed)}°/s | Affichée pendant ${displayTime}ms`);
                                     }
 
-                                    // ✅ MASQUER APRÈS displayTime ms EXACTEMENT
-                                    if (currentLetter && letterDisplayStartTime > 0) {
-                                        const elapsedTime = now - letterDisplayStartTime;
-                                        
-                                        if (elapsedTime >= displayTime && letterDisplay.style.opacity !== '0') {
-                                            letterDisplay.style.opacity = '0';
-                                            console.log(`🔲 MASQUÉE après ${elapsedTime}ms`);
-                                            letterDisplayStartTime = 0;
-                                        }
+                                    if (now - lastLetterTime > displayTime && letterDisplay.style.opacity !== '0') {
+                                        letterDisplay.style.opacity = '0';
                                     }
-
-                                    // Lissage angles affichés
-                                    smoothedYaw = smoothValue(angles.yaw, smoothedYaw, 0.3);
-                                    smoothedPitch = smoothValue(angles.pitch, smoothedPitch, 0.3);
-                                    currentYaw = smoothedYaw;
-                                    currentPitch = smoothedPitch;
                                 }
 
                                 log('statDetection', '✅ Visage détecté', 'success');
@@ -577,7 +518,6 @@
             }
         }
 
-        // ===== METTRE À JOUR STATISTIQUES =====
         function updateStats() {
             document.getElementById('statYaw').textContent = `Yaw: ${currentYaw.toFixed(1)}°`;
             document.getElementById('statPitch').textContent = `Pitch: ${currentPitch.toFixed(1)}°`;
@@ -587,20 +527,13 @@
             const cooldownRemaining = Math.max(0, cooldown - (now - lastLetterDisplayTime));
             document.getElementById('statCooldown').textContent = `Cooldown: ${Math.round(cooldownRemaining)}ms`;
             
-            // ✅ Affiche le temps d'affichage
-            let displayedTime = 0;
-            if (letterDisplayStartTime > 0) {
-                displayedTime = now - letterDisplayStartTime;
-            }
-            document.getElementById('statDisplayTime').textContent = `Affichée: ${Math.round(displayedTime)}ms`;
-            
             document.getElementById('statDistance').textContent = `Distance: ~${Math.round(currentDistance)}cm`;
             document.getElementById('statLetter').textContent = `Lettre: ${currentLetter || '--'}`;
             document.getElementById('statSize').textContent = `Taille: ${Math.round(currentLetterSize)}px`;
             document.getElementById('statFPS').textContent = `FPS: ${fps}`;
         }
 
-        // ===== CONTRÔLES DES PARAMÈTRES =====
+        // Contrôles
         document.getElementById('displayTime').addEventListener('input', (e) => {
             displayTime = parseInt(e.target.value);
             document.getElementById('dispVal').textContent = displayTime;
@@ -641,7 +574,6 @@
             document.getElementById('distVal').textContent = refDistance;
         });
 
-        // ===== DÉMARRER =====
         startCamera();
     </script>
 </body>
