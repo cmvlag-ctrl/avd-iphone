@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AVD - Accueil</title>
+    <title>AVD - Sélection du mode</title>
     <style>
+        /* STYLES COMMUNS */
         body {
             margin: 0;
             font-family: Arial, sans-serif;
@@ -18,14 +19,6 @@
             text-align: center;
         }
 
-        .selection-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-
         h1 {
             color: #4ecdc4;
             margin-bottom: 30px;
@@ -35,7 +28,7 @@
             background: #4ecdc4;
             border: none;
             padding: 20px 40px;
-            margin: 10px;
+            margin: 15px;
             font-size: 24px;
             font-weight: bold;
             border-radius: 10px;
@@ -50,34 +43,391 @@
             transform: scale(1.05);
         }
 
-        .mode-button.flash {
-            background: #6c5ce7;
-        }
-
-        .mode-button.flash:hover {
-            background: #5649c0;
-        }
-
-        /* Styles pour masquer les modes par défaut */
+        /* Masquer les applications par défaut */
         #flashApp, #trainingApp {
             display: none;
             width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Styles pour le mode Flash */
+        #testContainer {
+            width: 100%;
+            padding: 20px;
+        }
+
+        #introScreen, #endScreen {
+            display: block;
+        }
+
+        #testScreen {
+            display: none;
+        }
+
+        #letterDisplay {
+            font-size: 200px;
+            color: white;
+            text-shadow: 0 0 20px white;
+            opacity: 0;
+            transition: opacity 0.01s linear;
+            margin: 20px 0;
+            font-weight: bold;
+            min-height: 220px;
+        }
+
+        #keyboardResponse {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .key {
+            background: #4ecdc4;
+            border: none;
+            padding: 15px 20px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 60px;
+        }
+
+        .key:hover {
+            background: #28a745;
+            transform: scale(1.1);
+        }
+
+        .control-btn {
+            background: #4ecdc4;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: #28a745;
+        }
+
+        .back {
+            background: #555 !important;
+        }
+
+        .back:hover {
+            background: #777 !important;
+        }
+
+        /* Styles pour le mode Training */
+        .training-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
             height: 100%;
+            background: #000;
+            z-index: -1;
+        }
+
+        #video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        #letterDisplayTraining {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            color: white;
+            font-weight: bold;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #startMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #4ecdc4;
+            opacity: 0;
+            z-index: 20;
+            text-shadow: 0 0 10px #4ecdc4;
+            transition: opacity 0.3s;
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 25;
+            background: rgba(0,0,0,0.8);
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .stat {
+            margin: 5px 0;
+        }
+
+        .speed-gauge {
+            width: 150px;
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            margin: 5px auto;
+            overflow: hidden;
+        }
+
+        .speed-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0f0, #ff0, #f00);
+            transition: width 0.1s linear;
+        }
+
+        #scoreTopPanel {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 25;
+            background: rgba(0,0,0,0.8);
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        #calibPanel {
+            display: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #444;
+            text-align: center;
+        }
+
+        .calib-bar-container {
+            height: 20px;
+            border: 1px dashed #666;
+            margin: 10px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 12mm;
+        }
+
+        .calib-bar {
+            height: 100%;
+            background: red;
+            width: 10mm;
+            transform-origin: center;
+        }
+
+        #letterSizeControl {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 20;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 8px;
+            width: 120px;
+            text-align: center;
+        }
+
+        #letterSizeLabel {
+            font-size: 11px;
+            margin-bottom: 5px;
+        }
+
+        #letterSizeValue {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .size-control-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .size-btn {
+            background: #555;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        #keyboardTraining {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            z-index: 20;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .keyTraining {
+            background: #4ecdc4;
+            border: none;
+            padding: 10px 15px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .keyTraining:hover {
+            background: #28a745;
+            transform: scale(1.1);
+        }
+
+        .keyTraining.validated {
+            background: #28a745;
+        }
+
+        .keyTraining.invalid {
+            background: #dc3545;
+        }
+
+        #leftControls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 30;
+        }
+
+        #rightControls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 30;
+        }
+
+        .control-btn {
+            width: 100px;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+
+        .calib-btn {
+            background: #555 !important;
+            color: white !important;
+        }
+
+        .finish-btn {
+            background: #ffc107 !important;
+            color: #000 !important;
+        }
+
+        .finish-btn:hover {
+            background: #ffd54f !important;
+        }
+
+        #finalStatsOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 200;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .final-stat-box {
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .final-stat-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #4ecdc4;
+        }
+
+        .final-stat-item {
+            font-size: 16px;
+            margin: 8px 0;
+            color: white;
+        }
+
+        .final-stat-value {
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        #restartButton {
+            background: #28a745;
+            margin-top: 20px;
+            padding: 10px 30px;
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
     <!-- PAGE D'ACCUEIL -->
-    <div class="selection-screen" id="selectionScreen">
-        <h1>RVO - haute vitesse</h1>
+    <div id="selectionScreen">
+        <h1>AVD - Test d'Acuité Visuelle</h1>
         <p style="margin-bottom: 30px; color: #aaa;">Choisissez un mode de test</p>
-        <button class="mode-button flash" onclick="showFlashApp()">AVD Flash</button>
+        <button class="mode-button" onclick="showFlashApp()">AVD Flash</button>
         <button class="mode-button" onclick="showTrainingApp()">AVD Training</button>
     </div>
 
     <!-- MODE FLASH (CODE ORIGINAL INTACT) -->
     <div id="flashApp">
-        <!-- ===== CODE ORIGINAL FLASH - NE RIEN MODIFIER ===== -->
         <div id="testContainer">
             <div id="introScreen">
                 <h1>Test d'Acuité Visuelle - Flash</h1>
@@ -89,7 +439,7 @@
             <div id="testScreen">
                 <div id="letterDisplay"></div>
                 <div id="keyboardResponse"></div>
-                <div class="button-group">
+                <div style="margin-top: 20px;">
                     <button class="control-btn back" onclick="backToSelection()">← Retour</button>
                     <button class="control-btn" onclick="endTest()">TERMINER</button>
                 </div>
@@ -98,23 +448,21 @@
             <div id="endScreen">
                 <h2>Résultats</h2>
                 <div id="results"></div>
-                <div class="button-group">
+                <div style="margin-top: 20px;">
                     <button class="control-btn back" onclick="backToSelection()">← Retour</button>
                     <button class="control-btn" onclick="restartFlashTest()">Recommencer</button>
                 </div>
             </div>
         </div>
-        <!-- ===== FIN DU CODE ORIGINAL FLASH ===== -->
     </div>
 
     <!-- MODE TRAINING (CODE ORIGINAL INTACT) -->
     <div id="trainingApp">
-        <!-- ===== CODE ORIGINAL TRAINING - NE RIEN MODIFIER ===== -->
         <div class="training-bg"></div>
         <video id="video" playsinline autoplay muted></video>
         <div id="letterDisplayTraining">A</div>
         <div id="startMessage">Début</div>
-        <div id="ui">
+        <div id="ui" style="display:none;">
             <div class="stat" id="statusInit">Initialisation...</div>
             <div class="stat" id="statusSpeed">Vitesse: 0 px/s</div>
             <div class="speed-gauge"><div class="speed-bar" id="speedBar"></div></div>
@@ -131,7 +479,7 @@
                 <button class="control-btn" onclick="saveCalib()" style="margin-top:5px;">Sauvegarder</button>
             </div>
         </div>
-        <div id="letterSizeControl">
+        <div id="letterSizeControl" style="display:none;">
             <div id="letterSizeLabel">Taille lettre (px)</div>
             <div id="letterSizeValue">80</div>
             <div class="size-control-buttons">
@@ -140,75 +488,54 @@
                 <button class="size-btn" onclick="adjustLetterSize(10)">+</button>
             </div>
         </div>
-        <div id="keyboardTraining"></div>
-        <div id="leftControls">
-            <button class="control-btn calib-btn training" onclick="toggleCalib()">📏 Calibrer</button>
+        <div id="keyboardTraining" style="display:none;">
+            <!-- Clavier généré par JavaScript -->
         </div>
-        <div id="rightControls">
-            <button class="control-btn finish-btn training" onclick="showFinalStats()">FIN</button>
+        <div id="leftControls" style="display:none;">
+            <button class="control-btn calib-btn" onclick="toggleCalib()">📏 Calibrer</button>
+        </div>
+        <div id="rightControls" style="display:none;">
+            <button class="control-btn finish-btn" onclick="showFinalStats()">FIN</button>
         </div>
         <div id="finalStatsOverlay">
+            <h2 class="final-stat-title">Statistiques Finales</h2>
             <div class="final-stat-box">
-                <div class="final-stat-title">Statistiques Globales</div>
-                <div class="final-stat-item">Essais: <span class="final-stat-value" id="globalCount">0</span></div>
-                <div class="final-stat-item">Bonnes réponses: <span class="final-stat-value" id="globalCorrect">0</span></div>
-                <div class="final-stat-item">Taux de réussite: <span class="final-stat-value" id="globalSuccessRate">--%</span></div>
-                <div class="final-stat-item">Plus petite lettre: <span class="final-stat-value" id="globalMinSize">-- px</span></div>
-            </div>
-            <div class="final-stat-box">
-                <div class="final-stat-title">Direction Droite</div>
-                <div class="final-stat-item">Mouvements: <span class="final-stat-value" id="rightCount">0</span></div>
+                <div class="final-stat-item">Taux global de réussite: <span class="final-stat-value" id="globalSuccessRate">--%</span></div>
+                <div class="final-stat-item">Mouvements vers la <strong>droite</strong>: <span class="final-stat-value" id="rightCount">0</span> mouvements</div>
                 <div class="final-stat-item">Taux de réussite: <span class="final-stat-value" id="rightSuccessRate">--%</span></div>
-                <div class="final-stat-item">Plus petite lettre: <span class="final-stat-value" id="rightMinSize">-- px</span></div>
+                <div class="final-stat-item">Plus petite lettre réussie: <span class="final-stat-value" id="rightMinSize">-- px</span></div>
             </div>
             <div class="final-stat-box">
-                <div class="final-stat-title">Direction Gauche</div>
-                <div class="final-stat-item">Mouvements: <span class="final-stat-value" id="leftCount">0</span></div>
+                <div class="final-stat-item">Mouvements vers la <strong>gauche</strong>: <span class="final-stat-value" id="leftCount">0</span> mouvements</div>
                 <div class="final-stat-item">Taux de réussite: <span class="final-stat-value" id="leftSuccessRate">--%</span></div>
-                <div class="final-stat-item">Plus petite lettre: <span class="final-stat-value" id="leftMinSize">-- px</span></div>
+                <div class="final-stat-item">Plus petite lettre réussie: <span class="final-stat-value" id="leftMinSize">-- px</span></div>
             </div>
             <div class="final-stat-box">
-                <div class="final-stat-title">Direction Haut</div>
-                <div class="final-stat-item">Mouvements: <span class="final-stat-value" id="upCount">0</span></div>
+                <div class="final-stat-item">Mouvements vers le <strong>haut</strong>: <span class="final-stat-value" id="upCount">0</span> mouvements</div>
                 <div class="final-stat-item">Taux de réussite: <span class="final-stat-value" id="upSuccessRate">--%</span></div>
-                <div class="final-stat-item">Plus petite lettre: <span class="final-stat-value" id="upMinSize">-- px</span></div>
+                <div class="final-stat-item">Plus petite lettre réussie: <span class="final-stat-value" id="upMinSize">-- px</span></div>
             </div>
             <div class="final-stat-box">
-                <div class="final-stat-title">Direction Bas</div>
-                <div class="final-stat-item">Mouvements: <span class="final-stat-value" id="downCount">0</span></div>
+                <div class="final-stat-item">Mouvements vers le <strong>bas</strong>: <span class="final-stat-value" id="downCount">0</span> mouvements</div>
                 <div class="final-stat-item">Taux de réussite: <span class="final-stat-value" id="downSuccessRate">--%</span></div>
-                <div class="final-stat-item">Plus petite lettre: <span class="final-stat-value" id="downMinSize">-- px</span></div>
+                <div class="final-stat-value" id="downMinSize">-- px</div>
             </div>
             <button id="restartButton" onclick="restartTrainingTest()">Recommencer</button>
         </div>
-        <!-- ===== FIN DU CODE ORIGINAL TRAINING ===== -->
     </div>
 
     <script>
-        // ===== FONCTIONS DE NAVIGATION (UNIQUEMENT) =====
+        // ===== FONCTIONS DE NAVIGATION =====
         function showFlashApp() {
             document.getElementById('selectionScreen').style.display = 'none';
             document.getElementById('flashApp').style.display = 'block';
             document.getElementById('trainingApp').style.display = 'none';
-
-            // Initialiser le mode Flash si nécessaire
-            if (typeof initFlashApp === 'function') {
-                initFlashApp();
-            }
         }
 
         function showTrainingApp() {
             document.getElementById('selectionScreen').style.display = 'none';
             document.getElementById('trainingApp').style.display = 'block';
             document.getElementById('flashApp').style.display = 'none';
-
-            // Initialiser le mode Training si nécessaire
-            if (typeof initTrainingElements === 'function') {
-                initTrainingElements();
-            }
-            if (typeof startTrainingAppInternal === 'function') {
-                startTrainingAppInternal();
-            }
         }
 
         function backToSelection() {
@@ -216,27 +543,16 @@
             document.getElementById('flashApp').style.display = 'none';
             document.getElementById('trainingApp').style.display = 'none';
 
-            // Nettoyer les ressources si nécessaire
+            // Nettoyer les ressources
             if (typeof cleanupFlash === 'function') cleanupFlash();
             if (typeof cleanupTraining === 'function') cleanupTraining();
         }
 
-        // ===== CHARGEMENT DES SCRIPTS EXTERNES (UNIQUEMENT POUR TRAINING) =====
-        // Ces scripts sont nécessaires pour le mode Training
-        const script1 = document.createElement('script');
-        script1.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs";
-        document.body.appendChild(script1);
-
-        const script2 = document.createElement('script');
-        script2.src = "https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface";
-        document.body.appendChild(script2);
-
-        // ===== SCRIPT POUR LE MODE FLASH (ORIGINAL) =====
-        // Ce script contient toute la logique du mode Flash
+        // ===== SCRIPT MODE FLASH (EXACTEMENT COMME DANS VOTRE CODE) =====
         const flashScript = document.createElement('script');
         flashScript.textContent = `
-            // ===== CONFIGURATION FLASH =====
-            const flashConfig = {
+            const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'H', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V', 'X', 'Z'];
+            const CONFIG = {
                 flashDuration: 60,
                 minFontSize: 3,
                 maxFontSize: 400,
@@ -246,9 +562,7 @@
                 nextDelay: 500
             };
 
-            const flashLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'H', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V', 'X', 'Z'];
-
-            const flashState = {
+            const state = {
                 currentFontSize: 200,
                 currentLetter: '',
                 errorsInRow: 0,
@@ -258,80 +572,83 @@
                 timeouts: []
             };
 
-            // ===== FONCTIONS FLASH =====
-            function initFlashApp() {
-                flashState.currentFontSize = 200;
-                flashState.errorsInRow = 0;
-                flashState.totalTrials = 0;
-                flashState.correctAnswers = 0;
-                flashState.isTestRunning = false;
+            const introScreen = document.getElementById('introScreen');
+            const testScreen = document.getElementById('testScreen');
+            const endScreen = document.getElementById('endScreen');
+            const letterDisplay = document.getElementById('letterDisplay');
+            const results = document.getElementById('results');
+            const keyboardResponse = document.getElementById('keyboardResponse');
 
-                const keyboard = document.getElementById('keyboardResponse');
-                keyboard.innerHTML = '';
-                flashLetters.forEach(letter => {
+            function initKeyboardFlash() {
+                keyboardResponse.innerHTML = '';
+                letters.forEach(letter => {
                     const key = document.createElement('button');
                     key.className = 'key';
                     key.textContent = letter;
-                    key.onclick = () => validateFlashAnswer(letter);
-                    keyboard.appendChild(key);
+                    key.onclick = () => validateAnswer(letter);
+                    keyboardResponse.appendChild(key);
                 });
             }
 
             function startTest() {
-                flashState.currentFontSize = 200;
-                flashState.errorsInRow = 0;
-                flashState.totalTrials = 0;
-                flashState.correctAnswers = 0;
-                flashState.isTestRunning = true;
+                clearAllTimeouts();
 
-                document.getElementById('introScreen').style.display = 'none';
-                document.getElementById('endScreen').style.display = 'none';
-                document.getElementById('testScreen').style.display = 'block';
+                state.currentFontSize = 200;
+                state.currentLetter = '';
+                state.errorsInRow = 0;
+                state.totalTrials = 0;
+                state.correctAnswers = 0;
+                state.isTestRunning = true;
 
-                document.getElementById('letterDisplay').style.opacity = '0';
-                document.getElementById('letterDisplay').textContent = '';
+                introScreen.style.display = 'none';
+                endScreen.style.display = 'none';
+                testScreen.style.display = 'block';
 
-                showNextFlashLetter();
+                letterDisplay.style.opacity = '0';
+                letterDisplay.style.color = 'white';
+                letterDisplay.textContent = '';
+
+                showNextLetter();
             }
 
-            function clearAllTimeoutsFlash() {
-                flashState.timeouts.forEach(timeoutId => clearTimeout(timeoutId));
-                flashState.timeouts = [];
+            function clearAllTimeouts() {
+                state.timeouts.forEach(timeoutId => clearTimeout(timeoutId));
+                state.timeouts = [];
             }
 
-            function showNextFlashLetter() {
-                if (!flashState.isTestRunning) return;
+            function showNextLetter() {
+                if (!state.isTestRunning) return;
 
-                flashState.currentLetter = flashLetters[Math.floor(Math.random() * flashLetters.length)];
-                document.getElementById('letterDisplay').textContent = flashState.currentLetter;
-                document.getElementById('letterDisplay').style.fontSize = \`\${flashState.currentFontSize}px\`;
-                document.getElementById('letterDisplay').style.color = 'white';
-                document.getElementById('letterDisplay').style.opacity = '1';
+                state.currentLetter = letters[Math.floor(Math.random() * letters.length)];
+                letterDisplay.textContent = state.currentLetter;
+                letterDisplay.style.fontSize = \`\${state.currentFontSize}px\`;
+                letterDisplay.style.color = 'white';
+                letterDisplay.style.opacity = '1';
 
                 const hideTimeout = setTimeout(() => {
-                    document.getElementById('letterDisplay').style.opacity = '0';
-                }, flashConfig.flashDuration);
+                    letterDisplay.style.opacity = '0';
+                }, CONFIG.flashDuration);
 
-                flashState.timeouts.push(hideTimeout);
+                state.timeouts.push(hideTimeout);
             }
 
-            function validateFlashAnswer(selectedLetter) {
-                if (!flashState.isTestRunning) return;
+            function validateAnswer(selectedLetter) {
+                if (!state.isTestRunning) return;
 
-                const isCorrect = selectedLetter === flashState.currentLetter;
-                flashState.totalTrials++;
+                const isCorrect = selectedLetter === state.currentLetter;
+                state.totalTrials++;
 
                 if (isCorrect) {
-                    flashState.correctAnswers++;
-                    flashState.errorsInRow = 0;
-                    flashState.currentFontSize = Math.max(flashConfig.minFontSize, Math.floor(flashState.currentFontSize * flashConfig.sizeDecreaseFactor));
+                    state.correctAnswers++;
+                    state.errorsInRow = 0;
+                    state.currentFontSize = Math.max(CONFIG.minFontSize, Math.floor(state.currentFontSize * CONFIG.sizeDecreaseFactor));
                 } else {
-                    flashState.errorsInRow++;
-                    if (flashState.errorsInRow >= flashConfig.maxErrorsInRow) {
+                    state.errorsInRow++;
+                    if (state.errorsInRow >= CONFIG.maxErrorsInRow) {
                         endTest();
                         return;
                     }
-                    flashState.currentFontSize = Math.min(flashConfig.maxFontSize, Math.floor(flashState.currentFontSize * flashConfig.sizeIncreaseFactor));
+                    state.currentFontSize = Math.min(CONFIG.maxFontSize, Math.floor(state.currentFontSize * CONFIG.sizeIncreaseFactor));
                 }
 
                 const keys = document.querySelectorAll('#keyboardResponse .key');
@@ -339,163 +656,118 @@
 
                 setTimeout(() => {
                     keys.forEach(key => key.disabled = false);
-                    showNextFlashLetter();
-                }, flashConfig.nextDelay);
+                    showNextLetter();
+                }, CONFIG.nextDelay);
             }
 
             function endTest() {
-                flashState.isTestRunning = false;
-                document.getElementById('testScreen').style.display = 'none';
-                document.getElementById('endScreen').style.display = 'block';
+                state.isTestRunning = false;
+                testScreen.style.display = 'none';
+                endScreen.style.display = 'block';
 
-                const accuracy = flashState.totalTrials > 0 ? Math.round((flashState.correctAnswers / flashState.totalTrials) * 100) : 0;
-                document.getElementById('results').innerHTML = \`
+                const accuracy = state.totalTrials > 0 ? Math.round((state.correctAnswers / state.totalTrials) * 100) : 0;
+                results.innerHTML = \`
                     <h2>Résultats</h2>
-                    <p><strong>Essais :</strong> \${flashState.totalTrials}</p>
-                    <p><strong>Bonnes réponses :</strong> \${flashState.correctAnswers}</p>
+                    <p><strong>Essais :</strong> \${state.totalTrials}</p>
+                    <p><strong>Bonnes réponses :</strong> \${state.correctAnswers}</p>
                     <p><strong>Taux de réussite :</strong> \${accuracy}%</p>
-                    <p><strong>Taille minimale atteinte :</strong> \${flashState.currentFontSize}px</p>
+                    <p><strong>Taille minimale atteinte :</strong> \${state.currentFontSize}px</p>
                 \`;
             }
 
             function restartFlashTest() {
-                document.getElementById('endScreen').style.display = 'none';
-                document.getElementById('introScreen').style.display = 'block';
+                endScreen.style.display = 'none';
+                introScreen.style.display = 'block';
             }
 
-            // ===== NETTOYAGE =====
             function cleanupFlash() {
-                clearAllTimeoutsFlash();
+                clearAllTimeouts();
             }
+
+            // Initialiser le clavier
+            initKeyboardFlash();
         `;
         document.body.appendChild(flashScript);
 
-        // ===== SCRIPT POUR LE MODE TRAINING (ORIGINAL) =====
-        // Ce script contient toute la logique du mode Training
+        // ===== SCRIPT MODE TRAINING (EXACTEMENT COMME DANS VOTRE CODE) =====
         const trainingScript = document.createElement('script');
         trainingScript.textContent = `
-            // ===== CONFIGURATION TRAINING =====
-            const trainingLetters = "D F P V A N L C O E R U S Z H".split(" ");
+            const letters = "D F P V A N L C O E R U S Z H".split(" ");
+            let distance = 60;
+            let rawDistance = 60;
+            let speed = 0;
+            let smoothedSpeed = 0;
+            let lastHeadPos = null;
+            let lastTime = performance.now();
+            let state = 'IDLE';
+            let flashTimeout = null;
+            let model = null;
+            let video = document.getElementById('video');
+            let letterEl = document.getElementById('letterDisplayTraining');
+            let totalLetters = 0;
+            let correctLetters = 0;
+            let letterSizePx = 80;
+            let minSuccessfulLetterSize = Infinity;
+            let calibrationFactor = 1.0;
+            let lastMovementDirection = null;
 
-            const trainingState = {
-                currentLetter: '',
-                totalLetters: 0,
-                correctLetters: 0,
-                letterSizePx: 80,
-                minSuccessfulLetterSize: Infinity,
-                calibrationFactor: 1.0,
-                distance: 60,
-                rawDistance: 60,
-                speed: 0,
-                smoothedSpeed: 0,
-                lastHeadPos: null,
-                lastTime: performance.now(),
-                state: 'IDLE',
-                lastFlashTime: 0,
-                flashTimeout: null,
-                model: null,
-                video: null,
-                letterEl: null
-            };
-
-            const movements = {
+            // Statistiques par direction
+            let movements = {
                 right: { count: 0, correct: 0, minSize: Infinity },
                 left: { count: 0, correct: 0, minSize: Infinity },
                 up: { count: 0, correct: 0, minSize: Infinity },
                 down: { count: 0, correct: 0, minSize: Infinity }
             };
 
-            let lastMovementDirection = null;
+            const ui = document.getElementById('ui');
+            const scoreTopPanel = document.getElementById('scoreTopPanel');
+            const statusInit = document.getElementById('statusInit');
+            const statusSpeed = document.getElementById('statusSpeed');
+            const statusDist = document.getElementById('statusDist');
+            const statusSize = document.getElementById('statusSize');
+            const speedBar = document.getElementById('speedBar');
+            const calibSlider = document.getElementById('calibSlider');
+            const calibBar = document.getElementById('calibBar');
+            const letterSizeValue = document.getElementById('letterSizeValue');
+            const letterSizeInput = document.getElementById('letterSizeInput');
+            const keyboardTraining = document.getElementById('keyboardTraining');
+            const startMessage = document.getElementById('startMessage');
+            const finalStatsOverlay = document.getElementById('finalStatsOverlay');
+            const globalSuccessRate = document.getElementById('globalSuccessRate');
+            const rightCount = document.getElementById('rightCount');
+            const rightSuccessRate = document.getElementById('rightSuccessRate');
+            const rightMinSize = document.getElementById('rightMinSize');
+            const leftCount = document.getElementById('leftCount');
+            const leftSuccessRate = document.getElementById('leftSuccessRate');
+            const leftMinSize = document.getElementById('leftMinSize');
+            const upCount = document.getElementById('upCount');
+            const upSuccessRate = document.getElementById('upSuccessRate');
+            const upMinSize = document.getElementById('upMinSize');
+            const downCount = document.getElementById('downCount');
+            const downSuccessRate = document.getElementById('downSuccessRate');
+            const downMinSize = document.getElementById('downMinSize');
 
-            // ===== FONCTIONS TRAINING =====
-            function initTrainingElements() {
-                trainingState.video = document.getElementById('video');
-                trainingState.letterEl = document.getElementById('letterDisplayTraining');
-
-                const keyboardTraining = document.getElementById('keyboardTraining');
+            // --- INITIALISATION DU CLAVIER ---
+            function initKeyboardTraining() {
                 keyboardTraining.innerHTML = '';
-                trainingLetters.forEach(letter => {
+                const lettersSorted = [...letters].sort();
+
+                lettersSorted.forEach(letter => {
                     const key = document.createElement('button');
                     key.className = 'keyTraining';
                     key.textContent = letter;
-                    key.onclick = () => validateTrainingLetter(letter);
+                    key.onclick = () => validateLetter(letter);
                     keyboardTraining.appendChild(key);
                 });
-
-                const savedCalib = localStorage.getItem('avd_blazeface_calib_v3');
-                trainingState.calibrationFactor = savedCalib ? parseFloat(savedCalib) : 1.0;
-                document.getElementById('calibSlider').value = trainingState.calibrationFactor;
-                updateCalib();
             }
 
-            async function startTrainingAppInternal() {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
-                    });
-                    trainingState.video.srcObject = stream;
-                    trainingState.video.onloadedmetadata = async () => {
-                        document.getElementById('statusInit').textContent = "Chargement IA...";
-                        trainingState.model = await blazeface.load();
-                        document.getElementById('statusInit').textContent = "IA prête";
-                        document.getElementById('startMessage').style.opacity = '1';
+            // --- VALIDATION D'UNE LETTRE ---
+            function validateLetter(letter) {
+                if (state !== 'WAITING_VALIDATION') return;
 
-                        setTimeout(() => {
-                            document.getElementById('startMessage').style.opacity = '0';
-                        }, 1000);
-
-                        document.getElementById('ui').style.display = 'block';
-                        document.getElementById('letterSizeControl').style.display = 'block';
-                        document.getElementById('keyboardTraining').style.display = 'flex';
-                        document.getElementById('leftControls').style.display = 'block';
-                        document.getElementById('rightControls').style.display = 'block';
-                        trainingState.video.play();
-                        updateLetterDisplay();
-                        loopTraining();
-                    };
-                } catch (err) {
-                    document.getElementById('statusInit').textContent = "Erreur Caméra : " + err.message;
-                }
-            }
-
-            function updateLetterDisplay() {
-                trainingState.letterEl.style.fontSize = \`\${trainingState.letterSizePx}px\`;
-                document.getElementById('letterSizeValue').textContent = trainingState.letterSizePx;
-                document.getElementById('statusSize').textContent = \`Taille: \${trainingState.letterSizePx} px\`;
-            }
-
-            function adjustLetterSize(change) {
-                trainingState.letterSizePx = Math.max(5, Math.min(300, trainingState.letterSizePx + change));
-                updateLetterDisplay();
-            }
-
-            function updateLetterSizeFromInput() {
-                const inputValue = parseInt(document.getElementById('letterSizeInput').value);
-                trainingState.letterSizePx = Math.max(5, Math.min(300, inputValue));
-                updateLetterDisplay();
-            }
-
-            function toggleCalib() {
-                const panel = document.getElementById('calibPanel');
-                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-            }
-
-            function updateCalib() {
-                trainingState.calibrationFactor = parseFloat(document.getElementById('calibSlider').value);
-                document.getElementById('calibBar').style.transform = \`scaleX(\${trainingState.calibrationFactor})\`;
-            }
-
-            function saveCalib() {
-                localStorage.setItem('avd_blazeface_calib_v3', trainingState.calibrationFactor);
-                document.getElementById('calibPanel').style.display = 'none';
-            }
-
-            function validateTrainingLetter(letter) {
-                if (trainingState.state !== 'WAITING_VALIDATION') return;
-
-                if (trainingState.flashTimeout) {
-                    clearTimeout(trainingState.flashTimeout);
-                    trainingState.flashTimeout = null;
+                if (flashTimeout) {
+                    clearTimeout(flashTimeout);
+                    flashTimeout = null;
                 }
 
                 const keys = document.querySelectorAll('.keyTraining');
@@ -504,76 +776,169 @@
                 const clickedKey = Array.from(keys).find(k => k.textContent === letter);
 
                 if (clickedKey) {
-                    trainingState.totalLetters++;
-                    if (letter === trainingState.currentLetter) {
-                        trainingState.correctLetters++;
+                    totalLetters++;
+                    if (letter === currentDisplayedLetter) {
+                        // Bonne réponse
+                        correctLetters++;
                         clickedKey.classList.add('validated');
-                        trainingState.letterEl.style.opacity = '0';
+                        letterEl.style.opacity = '0';
 
-                        trainingState.letterSizePx = Math.max(5, trainingState.letterSizePx - 5);
-                        if (trainingState.letterSizePx < trainingState.minSuccessfulLetterSize) {
-                            trainingState.minSuccessfulLetterSize = trainingState.letterSizePx;
+                        // Réduire la taille de la lettre
+                        letterSizePx = Math.max(5, letterSizePx - 5);
+
+                        if (letterSizePx < minSuccessfulLetterSize) {
+                            minSuccessfulLetterSize = letterSizePx;
                         }
 
+                        // Mettre à jour la taille minimale pour la direction du dernier mouvement
                         if (lastMovementDirection && movements[lastMovementDirection]) {
-                            if (trainingState.letterSizePx < movements[lastMovementDirection].minSize) {
-                                movements[lastMovementDirection].minSize = trainingState.letterSizePx;
+                            if (letterSizePx < movements[lastMovementDirection].minSize) {
+                                movements[lastMovementDirection].minSize = letterSizePx;
                             }
                             movements[lastMovementDirection].correct++;
                         }
                     } else {
+                        // Mauvaise réponse
                         clickedKey.classList.add('invalid');
+                        letterSizePx = Math.min(300, letterSizePx + 5);
                     }
                 }
 
-                trainingState.state = 'IDLE';
-                updateStatsTraining();
+                updateScore();
+                updateLetterDisplay();
+                updateStats();
+                state = 'IDLE';
             }
 
-            function updateStatsTraining() {
-                document.getElementById('statusSpeed').textContent = \`Vitesse: \${Math.round(trainingState.speed)} px/s\`;
-                document.getElementById('statusDist').textContent = \`Dist: ~\${Math.round(trainingState.distance)} cm\`;
-                document.getElementById('statusSize').textContent = \`Taille: \${trainingState.letterSizePx} px\`;
-
-                let pct = Math.min(100, (trainingState.speed / 250) * 100);
-                document.getElementById('speedBar').style.width = \`\${pct}%\`;
-                const bar = document.getElementById('speedBar');
-                if(trainingState.speed > 150) bar.style.background = '#f00';
-                else bar.style.background = 'linear-gradient(90deg, #0f0, #ff0, #f00)';
-
-                const globalSuccessRate = trainingState.totalLetters > 0 ?
-                    Math.round((trainingState.correctLetters / trainingState.totalLetters) * 100) : 0;
-                document.getElementById('scoreTopPanel').innerHTML = \`
-                    Score: \${globalSuccessRate}% | Min: \${trainingState.minSuccessfulLetterSize !== Infinity ? trainingState.minSuccessfulLetterSize + 'px' : '-- px'}
-                \`;
+            // --- METTRE À JOUR LE SCORE ---
+            function updateScore() {
+                const score = totalLetters > 0 ? Math.round((correctLetters / totalLetters) * 100) : 0;
+                scoreTopPanel.innerHTML = \`Score: \${score}% | Min: \${minSuccessfulLetterSize !== Infinity ? minSuccessfulLetterSize + ' px' : '-- px'}\`;
             }
 
-            function handleTrainingState(currentSpeed, now) {
-                const minSpeedTrigger = 150;
-                const flashDuration = 60;
-                const cooldownDuration = 1000;
+            // --- METTRE À JOUR L'AFFICHAGE DE LA LETTRE ---
+            function updateLetterDisplay() {
+                letterEl.style.fontSize = \`\${letterSizePx}px\`;
+                letterSizeValue.textContent = letterSizePx;
+                letterSizeInput.value = letterSizePx;
+                statusSize.textContent = \`Taille: \${letterSizePx} px\`;
+            }
 
-                if (trainingState.state === 'IDLE') {
-                    if (currentSpeed > minSpeedTrigger && (now - trainingState.lastFlashTime > cooldownDuration)) {
-                        trainingState.state = 'WAITING_VALIDATION';
-                        trainingState.lastFlashTime = now;
-                        trainingState.currentLetter = trainingLetters[Math.floor(Math.random() * trainingLetters.length)];
-                        trainingState.letterEl.textContent = trainingState.currentLetter;
-                        trainingState.letterEl.style.opacity = '1';
+            // --- AJUSTER LA TAILLE DE LA LETTRE ---
+            function adjustLetterSize(change) {
+                letterSizePx = Math.max(5, Math.min(300, letterSizePx + change));
+                updateLetterDisplay();
+            }
 
-                        trainingState.flashTimeout = setTimeout(() => {
-                            if (trainingState.state === 'WAITING_VALIDATION') {
-                                trainingState.letterEl.style.opacity = '0';
-                            }
-                        }, flashDuration);
-                    }
+            function updateLetterSizeFromInput() {
+                const inputValue = parseInt(letterSizeInput.value);
+                letterSizePx = Math.max(5, Math.min(300, inputValue));
+                updateLetterDisplay();
+            }
+
+            // --- METTRE À JOUR LES STATISTIQUES ---
+            function updateStats() {
+                statusSpeed.textContent = \`Vitesse: \${Math.round(smoothedSpeed)} px/s\`;
+                statusDist.textContent = \`Dist: ~\${Math.round(distance)} cm\`;
+
+                let pct = Math.min(100, (smoothedSpeed / 250) * 100);
+                speedBar.style.width = \`\${pct}%\`;
+                if(smoothedSpeed > 150) speedBar.style.background = '#f00';
+                else speedBar.style.background = 'linear-gradient(90deg, #0f0, #ff0, #f00)';
+            }
+
+            // --- CALIBRATION ---
+            function toggleCalib() {
+                const panel = document.getElementById('calibPanel');
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            }
+
+            function updateCalib() {
+                calibrationFactor = parseFloat(calibSlider.value);
+                calibBar.style.transform = \`scaleX(\${calibrationFactor})\`;
+            }
+
+            function saveCalib() {
+                localStorage.setItem('avd_blazeface_calib_v3', calibrationFactor);
+                document.getElementById('calibPanel').style.display = 'none';
+                updateStats();
+            }
+
+            function loadCalib() {
+                const saved = localStorage.getItem('avd_blazeface_calib_v3');
+                if (saved) {
+                    calibrationFactor = parseFloat(saved);
+                    calibSlider.value = calibrationFactor;
+                    updateCalib();
                 }
             }
 
-            async function loopTraining() {
-                if (!trainingState.model) return;
+            // --- METTRE À JOUR LES STATISTIQUES FINALES ---
+            function showFinalStats() {
+                const globalSuccess = totalLetters > 0 ?
+                    Math.round((correctLetters / totalLetters) * 100) : 0;
 
-                const predictions = await trainingState.model.estimateFaces(trainingState.video, false);
+                globalSuccessRate.textContent = \`\${globalSuccess}%\`;
+
+                // Droite
+                rightCount.textContent = movements.right.count;
+                rightSuccessRate.textContent = movements.right.count > 0 ?
+                    \`\${Math.round((movements.right.correct / movements.right.count) * 100)}%\` : '--%';
+                rightMinSize.textContent = movements.right.minSize !== Infinity ?
+                    \`\${movements.right.minSize} px\` : '-- px';
+
+                // Gauche
+                leftCount.textContent = movements.left.count;
+                leftSuccessRate.textContent = movements.left.count > 0 ?
+                    \`\${Math.round((movements.left.correct / movements.left.count) * 100)}%\` : '--%';
+                leftMinSize.textContent = movements.left.minSize !== Infinity ?
+                    \`\${movements.left.minSize} px\` : '-- px';
+
+                // Haut
+                upCount.textContent = movements.up.count;
+                upSuccessRate.textContent = movements.up.count > 0 ?
+                    \`\${Math.round((movements.up.correct / movements.up.count) * 100)}%\` : '--%';
+                upMinSize.textContent = movements.up.minSize !== Infinity ?
+                    \`\${movements.up.minSize} px\` : '-- px';
+
+                // Bas
+                downCount.textContent = movements.down.count;
+                downSuccessRate.textContent = movements.down.count > 0 ?
+                    \`\${Math.round((movements.down.correct / movements.down.count) * 100)}%\` : '--%';
+                downMinSize.textContent = movements.down.minSize !== Infinity ?
+                    \`\${movements.down.minSize} px\` : '-- px';
+
+                finalStatsOverlay.style.display = 'flex';
+            }
+
+            function restartTrainingTest() {
+                totalLetters = 0;
+                correctLetters = 0;
+                minSuccessfulLetterSize = Infinity;
+                movements = {
+                    right: { count: 0, correct: 0, minSize: Infinity },
+                    left: { count: 0, correct: 0, minSize: Infinity },
+                    up: { count: 0, correct: 0, minSize: Infinity },
+                    down: { count: 0, correct: 0, minSize: Infinity }
+                };
+                lastMovementDirection = null;
+
+                letterSizePx = 80;
+                updateLetterDisplay();
+                finalStatsOverlay.style.display = 'none';
+            }
+
+            // --- METTRE À JOUR LES STATISTIQUES DE MOUVEMENT ---
+            function updateMovementStats(direction) {
+                movements[direction].count++;
+                lastMovementDirection = direction;
+            }
+
+            // --- BOUCLE PRINCIPALE ---
+            async function loop() {
+                if (!model) return;
+
+                const predictions = await model.estimateFaces(video, false);
 
                 if (predictions.length > 0) {
                     const face = predictions[0];
@@ -581,6 +946,7 @@
                     const leftEye = face.landmarks[0];
                     const rightEye = face.landmarks[1];
 
+                    // 1. DISTANCE
                     const distInterYeuxPx = Math.sqrt(
                         Math.pow(rightEye[0] - leftEye[0], 2) +
                         Math.pow(rightEye[1] - leftEye[1], 2)
@@ -588,99 +954,120 @@
                     const K_FACTOR = 2800;
                     if (distInterYeuxPx > 5) {
                         let calculatedDist = K_FACTOR / distInterYeuxPx;
-                        trainingState.rawDistance = calculatedDist;
-                        trainingState.distance = (trainingState.distance * 0.9) + (trainingState.rawDistance * 0.1);
-                        trainingState.distance = Math.max(30, Math.min(120, trainingState.distance));
+                        rawDistance = calculatedDist;
+                        distance = (distance * 0.9) + (rawDistance * 0.1);
+                        distance = Math.max(30, Math.min(120, distance));
                     }
 
+                    // 2. VITESSE
                     const now = performance.now();
-                    if (trainingState.lastHeadPos && trainingState.lastTime) {
-                        const dx = nose[0] - trainingState.lastHeadPos[0];
-                        const dy = nose[1] - trainingState.lastHeadPos[1];
-                        const dt = now - trainingState.lastTime;
+                    if (lastHeadPos && lastTime) {
+                        const dx = nose[0] - lastHeadPos[0];
+                        const dy = nose[1] - lastHeadPos[1];
+                        const dt = now - lastTime;
 
-                        trainingState.speed = Math.sqrt(dx*dx + dy*dy) / dt * 1000;
-                        trainingState.smoothedSpeed = (trainingState.smoothedSpeed * 0.8) + (trainingState.speed * 0.2);
+                        speed = Math.sqrt(dx*dx + dy*dy) / dt * 1000;
+                        smoothedSpeed = (smoothedSpeed * 0.8) + (speed * 0.2);
 
-                        if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
+                        // Seuil pour considérer un mouvement significatif
+                        const threshold = 10;
+
+                        if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
                             if (Math.abs(dx) > Math.abs(dy)) {
-                                lastMovementDirection = dx > 0 ? 'right' : 'left';
+                                // Mouvement horizontal dominant
+                                if (dx > 0) {
+                                    updateMovementStats('right');
+                                } else {
+                                    updateMovementStats('left');
+                                }
                             } else {
-                                lastMovementDirection = dy > 0 ? 'down' : 'up';
-                            }
-                            if (lastMovementDirection && movements[lastMovementDirection]) {
-                                movements[lastMovementDirection].count++;
+                                // Mouvement vertical dominant
+                                if (dy > 0) {
+                                    updateMovementStats('down');
+                                } else {
+                                    updateMovementStats('up');
+                                }
                             }
                         }
                     }
-                    trainingState.lastHeadPos = [...nose];
-                    trainingState.lastTime = now;
+                    lastHeadPos = [...nose];
+                    lastTime = now;
 
-                    handleTrainingState(trainingState.smoothedSpeed, now);
+                    // 3. DÉCLENCHEMENT DU TEST
+                    const minSpeedTrigger = 150;
+                    const flashDuration = 60;
+                    const cooldownDuration = 1000;
+
+                    if (state === 'IDLE') {
+                        if (smoothedSpeed > minSpeedTrigger && (now - (lastMovementDirection ? lastTime : 0) > cooldownDuration)) {
+                            state = 'WAITING_VALIDATION';
+                            currentDisplayedLetter = letters[Math.floor(Math.random() * letters.length)];
+                            letterEl.textContent = currentDisplayedLetter;
+                            letterEl.style.opacity = '1';
+
+                            flashTimeout = setTimeout(() => {
+                                if (state === 'WAITING_VALIDATION') {
+                                    letterEl.style.opacity = '0';
+                                }
+                            }, flashDuration);
+                        }
+                    }
                 }
 
-                requestAnimationFrame(loopTraining);
+                requestAnimationFrame(loop);
             }
 
-            function showFinalStats() {
-                document.getElementById('globalCount').textContent = trainingState.totalLetters;
-                document.getElementById('globalCorrect').textContent = trainingState.correctLetters;
-                const globalSuccessRate = trainingState.totalLetters > 0 ?
-                    Math.round((trainingState.correctLetters / trainingState.totalLetters) * 100) : 0;
-                document.getElementById('globalSuccessRate').textContent = \`\${globalSuccessRate}%\`;
-                document.getElementById('globalMinSize').textContent = trainingState.minSuccessfulLetterSize !== Infinity ?
-                    \`\${trainingState.minSuccessfulLetterSize} px\` : '-- px';
+            // --- DÉMARRAGE ---
+            async function startTrainingAppInternal() {
+                loadCalib();
+                initKeyboardTraining();
 
-                document.getElementById('rightCount').textContent = movements.right.count;
-                document.getElementById('rightSuccessRate').textContent = movements.right.count > 0 ?
-                    \`\${Math.round((movements.right.correct / movements.right.count) * 100)}%\` : '--%';
-                document.getElementById('rightMinSize').textContent = movements.right.minSize !== Infinity ?
-                    \`\${movements.right.minSize} px\` : '-- px';
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+                    });
+                    video.srcObject = stream;
+                    video.onloadedmetadata = async () => {
+                        ui.style.display = 'block';
+                        letterSizeControl.style.display = 'block';
+                        keyboardTraining.style.display = 'flex';
+                        leftControls.style.display = 'block';
+                        rightControls.style.display = 'block';
+                        video.play();
+                        statusInit.textContent = "Chargement IA...";
+                        model = await blazeface.load();
+                        statusInit.textContent = "IA prête";
+                        startMessage.style.opacity = '1';
 
-                document.getElementById('leftCount').textContent = movements.left.count;
-                document.getElementById('leftSuccessRate').textContent = movements.left.count > 0 ?
-                    \`\${Math.round((movements.left.correct / movements.left.count) * 100)}%\` : '--%';
-                document.getElementById('leftMinSize').textContent = movements.left.minSize !== Infinity ?
-                    \`\${movements.left.minSize} px\` : '-- px';
+                        setTimeout(() => {
+                            startMessage.style.opacity = '0';
+                        }, 1000);
 
-                document.getElementById('upCount').textContent = movements.up.count;
-                document.getElementById('upSuccessRate').textContent = movements.up.count > 0 ?
-                    \`\${Math.round((movements.up.correct / movements.up.count) * 100)}%\` : '--%';
-                document.getElementById('upMinSize').textContent = movements.up.minSize !== Infinity ?
-                    \`\${movements.up.minSize} px\` : '-- px';
-
-                document.getElementById('downCount').textContent = movements.down.count;
-                document.getElementById('downSuccessRate').textContent = movements.down.count > 0 ?
-                    \`\${Math.round((movements.down.correct / movements.down.count) * 100)}%\` : '--%';
-                document.getElementById('downMinSize').textContent = movements.down.minSize !== Infinity ?
-                    \`\${movements.down.minSize} px\` : '-- px';
-
-                document.getElementById('finalStatsOverlay').style.display = 'flex';
-            }
-
-            function restartTrainingTest() {
-                trainingState.totalLetters = 0;
-                trainingState.correctLetters = 0;
-                trainingState.minSuccessfulLetterSize = Infinity;
-                movements.right = { count: 0, correct: 0, minSize: Infinity };
-                movements.left = { count: 0, correct: 0, minSize: Infinity };
-                movements.up = { count: 0, correct: 0, minSize: Infinity };
-                movements.down = { count: 0, correct: 0, minSize: Infinity };
-                lastMovementDirection = null;
-
-                trainingState.letterSizePx = 80;
-                updateLetterDisplay();
-                document.getElementById('finalStatsOverlay').style.display = 'none';
+                        updateLetterDisplay();
+                        loop();
+                    };
+                } catch (err) {
+                    statusInit.textContent = "Erreur Caméra : " + err.message;
+                }
             }
 
             function cleanupTraining() {
-                if (trainingState.video && trainingState.video.srcObject) {
-                    trainingState.video.srcObject.getTracks().forEach(track => track.stop());
+                if (video && video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
                 }
-                if (trainingState.flashTimeout) {
-                    clearTimeout(trainingState.flashTimeout);
+                if (flashTimeout) {
+                    clearTimeout(flashTimeout);
                 }
             }
+
+            // Charger les bibliothèques externes
+            const tfScript = document.createElement('script');
+            tfScript.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs";
+            document.body.appendChild(tfScript);
+
+            const blazefaceScript = document.createElement('script');
+            blazefaceScript.src = "https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface";
+            document.body.appendChild(blazefaceScript);
         `;
         document.body.appendChild(trainingScript);
     </script>
